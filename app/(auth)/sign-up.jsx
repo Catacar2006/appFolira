@@ -11,10 +11,10 @@ import {
   Alert,
   KeyboardAvoidingView,
   Platform,
-  Keyboard
 } from "react-native";
 import { FontAwesome } from "@expo/vector-icons";
-import { useRouter } from 'expo-router';
+import * as ImagePicker from 'expo-image-picker';
+import { useRouter } from "expo-router";
 import Header from "../../components/Header";
 import Footer from "../../components/Footer";
 import { createUser } from "../../lib/appwrite";
@@ -37,6 +37,8 @@ const Register = () => {
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [modalVisible, setModalVisible] = useState(false);
+  const [birthDate, setBirthDate] = useState("");
+  const [image, setImage] = useState(null); 
 
   const router = useRouter();
 
@@ -47,10 +49,12 @@ const Register = () => {
     if (!lastName) return "Apellido es obligatorio";
     if (!email) return "Correo electrónico es obligatorio";
     if (!password) return "Contraseña es obligatoria";
-    if (password.length < 6) return "La contraseña debe tener al menos 6 caracteres";
+    if (password.length < 6)
+      return "La contraseña debe tener al menos 6 caracteres";
     if (password !== confirmPassword) return "Las contraseñas no coinciden";
     if (!validateEmail(email)) return "El correo electrónico no es válido";
-    if (!/^\d+$/.test(documentNumber)) return "El número de documento debe contener solo números";
+    if (!/^\d+$/.test(documentNumber))
+      return "El número de documento debe contener solo números";
     return null;
   };
 
@@ -69,7 +73,7 @@ const Register = () => {
     try {
       await createUser(email, password);
       Alert.alert("Éxito", "Usuario registrado correctamente");
-      router.push('/sign-in'); // Navegar a la pantalla de inicio de sesión
+      router.push("/sign-in"); // Navegar a la pantalla de inicio de sesión
     } catch (error) {
       Alert.alert("Error", "No se pudo registrar el usuario");
       console.error("Error:", error);
@@ -81,33 +85,49 @@ const Register = () => {
     setModalVisible(false);
   };
 
+  const handleBirthDateChange = (text) => {
+    // Expresión regular para permitir solo números y "/"
+    const regex = /^[0-9/]*$/;
+
+    if (regex.test(text)) {
+      setBirthDate(text); // Actualiza el valor solo si cumple con la validación
+    }
+  };
+
+  const pickImage = async () => {
+    // Solicita permiso para acceder a las imágenes del dispositivo
+    let permissionResult = await ImagePicker.requestMediaLibraryPermissionsAsync();
+
+    if (permissionResult.granted === false) {
+      Alert.alert("Permiso denegado", "Se necesita permiso para acceder a la galería");
+      return;
+    }
+
+    // Abre la galería para seleccionar una imagen
+    let result = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ImagePicker.MediaTypeOptions.All,
+      allowsEditing: true,
+      aspect: [4, 3],
+      quality: 1,
+    });
+
+    if (!result.canceled) {
+      setImage(result.assets[0].uri); // Almacena la URI de la imagen seleccionada
+    }
+  };
+
   return (
     <SafeAreaView style={styles.container}>
       <KeyboardAvoidingView
         style={styles.keyboardAvoidingView}
-        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-        keyboardVerticalOffset={Platform.OS === 'ios' ? 100 : 0}
+        behavior={Platform.OS === "ios" ? "padding" : "height"}
+        keyboardVerticalOffset={Platform.OS === "ios" ? 100 : 0}
       >
         <ScrollView contentContainerStyle={styles.scrollViewContent}>
           <Header />
           <View style={styles.innerContainer}>
             <View style={styles.formBox}>
               <Text style={styles.title}>Crear Cuenta</Text>
-
-              {/* Document Type */}
-              <Text style={styles.label}>Tipo de Documento</Text>
-              <TouchableOpacity
-                style={styles.inputBox}
-                onPress={() => setModalVisible(true)}
-              >
-                <TextInput
-                  style={styles.input}
-                  placeholder="Seleccione un tipo de documento"
-                  value={documentType}
-                  editable={false}
-                />
-                <FontAwesome name="id-card" size={20} style={styles.icon} />
-              </TouchableOpacity>
 
               {/* Document Number */}
               <Text style={styles.label}>Número de Documento</Text>
@@ -116,49 +136,72 @@ const Register = () => {
                   style={styles.input}
                   placeholder="Ingrese su número de documento"
                   value={documentNumber}
-                  onChangeText={(text) => setDocumentNumber(text.replace(/[^0-9]/g, ''))} // Solo números
+                  onChangeText={(text) =>
+                    setDocumentNumber(text.replace(/[^0-9]/g, ""))
+                  } // Solo números
                   keyboardType="numeric"
                   maxLength={20}
                 />
-                <FontAwesome name="key" size={20} style={styles.icon} />
               </View>
 
-              {/* Name */}
-              <Text style={styles.label}>Nombre</Text>
+              {/* name usua */}
+              <Text style={styles.label}>Nombre Usuario</Text>
               <View style={styles.inputBox}>
                 <TextInput
                   style={styles.input}
-                  placeholder="Ingrese su nombre aquí"
+                  placeholder="Ingrese el nombre de usuario"
                   value={name}
                   onChangeText={setName}
                 />
-                <FontAwesome name="user" size={20} style={styles.icon} />
               </View>
 
-              {/* Last Name */}
-              <Text style={styles.label}>Apellido</Text>
+              {/* number phone */}
+              <Text style={styles.label}>Número de Telefono</Text>
               <View style={styles.inputBox}>
                 <TextInput
                   style={styles.input}
-                  placeholder="Ingrese su apellido aquí"
-                  value={lastName}
-                  onChangeText={setLastName}
+                  placeholder="Ingrese su número de Telefono"
+                  value={documentNumber}
+                  onChangeText={(text) =>
+                    setDocumentNumber(text.replace(/[^0-9]/g, ""))
+                  } // Solo números
+                  keyboardType="numeric"
+                  maxLength={20}
                 />
-                <FontAwesome name="user" size={20} style={styles.icon} />
               </View>
+
+              {/* Birthdate */}
+              <Text style={styles.label}>Fecha de Nacimiento</Text>
+              <View style={styles.inputBox}>
+                <TextInput
+                  style={styles.input}
+                  placeholder="DD/MM/YYYY"
+                  value={birthDate}
+                  onChangeText={handleBirthDateChange}
+                  keyboardType="numeric" // Esto también ayuda a evitar letras en teclados móviles
+                />
+              </View>
+
+              {/* Campo para adjuntar imagen */}
+              <Text style={styles.label}>Foto de perfil</Text>
+              <TouchableOpacity style={styles.imageUploadButton} onPress={pickImage}>
+                <Text style={styles.imageUploadText}>Seleccionar Imagen</Text>
+              </TouchableOpacity>
+
+              {/* Vista previa de la imagen seleccionada */}
+              {image && <Image source={{ uri: image }} style={styles.imagePreview} />}
 
               {/* Email */}
               <Text style={styles.label}>Correo Electrónico</Text>
               <View style={styles.inputBox}>
                 <TextInput
                   style={styles.input}
-                  placeholder="Ingrese su correo electrónico aquí"
+                  placeholder="Ingrese su correo electrónico"
                   value={email}
                   onChangeText={setEmail}
                   keyboardType="email-address"
                   autoCapitalize="none"
                 />
-                <FontAwesome name="envelope" size={20} style={styles.icon} />
               </View>
 
               {/* Password */}
@@ -166,7 +209,7 @@ const Register = () => {
               <View style={styles.passwordContainer}>
                 <TextInput
                   style={styles.passwordInput}
-                  placeholder="Ingrese su contraseña aquí"
+                  placeholder="Ingrese su contraseña"
                   secureTextEntry={!passwordVisible}
                   value={password}
                   onChangeText={setPassword}
@@ -180,29 +223,7 @@ const Register = () => {
                     size={20}
                   />
                 </TouchableOpacity>
-                <FontAwesome name="lock" size={20} style={styles.iconAfterEye} />
-              </View>
 
-              {/* Confirm Password */}
-              <Text style={styles.label}>Confirmar Contraseña</Text>
-              <View style={styles.passwordContainer}>
-                <TextInput
-                  style={styles.passwordInput}
-                  placeholder="Confirme su contraseña aquí"
-                  secureTextEntry={!confirmPasswordVisible}
-                  value={confirmPassword}
-                  onChangeText={setConfirmPassword}
-                />
-                <TouchableOpacity
-                  style={styles.eyeIcon}
-                  onPress={() => setConfirmPasswordVisible(!confirmPasswordVisible)}
-                >
-                  <FontAwesome
-                    name={confirmPasswordVisible ? "eye-slash" : "eye"}
-                    size={20}
-                  />
-                </TouchableOpacity>
-                <FontAwesome name="lock" size={20} style={styles.iconAfterEye} />
               </View>
 
               <TouchableOpacity
@@ -214,46 +235,19 @@ const Register = () => {
 
               <View style={styles.loginLink}>
                 <Text style={styles.loginPrompt}>¿Ya tienes una cuenta?</Text>
-                <TouchableOpacity onPress={() => router.push('/sign-in')}>
+                <TouchableOpacity onPress={() => router.push("/sign-in")}>
                   <Text style={styles.loginText}>Iniciar sesión</Text>
                 </TouchableOpacity>
               </View>
             </View>
           </View>
           <View style={styles.footer}>
-            <Footer/>
+            <Footer />
           </View>
         </ScrollView>
       </KeyboardAvoidingView>
 
-      {/* Modal for Document Type */}
-      <Modal
-        animationType="slide"
-        transparent={true}
-        visible={modalVisible}
-        onRequestClose={() => setModalVisible(false)}
-      >
-        <View style={styles.modalContainer}>
-          <View style={styles.modalContent}>
-            <Text style={styles.modalTitle}>Seleccionar Tipo de Documento</Text>
-            {documentTypes.map((type) => (
-              <TouchableOpacity
-                key={type}
-                style={styles.modalButton}
-                onPress={() => handleDocumentTypeSelect(type)}
-              >
-                <Text style={styles.modalButtonText}>{type}</Text>
-              </TouchableOpacity>
-            ))}
-            <TouchableOpacity
-              style={styles.modalCloseButton}
-              onPress={() => setModalVisible(false)}
-            >
-              <Text style={styles.modalCloseButtonText}>Cerrar</Text>
-            </TouchableOpacity>
-          </View>
-        </View>
-      </Modal>
+      
     </SafeAreaView>
   );
 };
@@ -261,7 +255,7 @@ const Register = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#fff',
+    backgroundColor: "#fff",
   },
   keyboardAvoidingView: {
     flex: 1,
@@ -271,27 +265,29 @@ const styles = StyleSheet.create({
   },
   innerContainer: {
     flex: 1,
-    alignItems: 'center',
+    alignItems: "center",
     padding: 20,
   },
   formBox: {
-    width: '100%',
+    width: "100%",
     padding: 15,
-    backgroundColor: 'white',
+    backgroundColor: "white",
     borderRadius: 8,
-    boxShadow: '0px 4px 8px rgba(0, 0, 0, 0.3)',
+    boxShadow: "0px 4px 8px rgba(0, 0, 0, 0.3)",
     elevation: 5,
     marginBottom: 20,
   },
   title: {
     fontSize: 28,
-    fontWeight: 'bold',
+    fontWeight: "bold",
+    color: "#503b31",
     marginBottom: 20,
-    textAlign: 'center',
+    textAlign: "center",
   },
   label: {
     fontSize: 16,
     fontWeight: "bold",
+    color: "#503b31",
     marginBottom: 5,
     marginTop: 10,
   },
@@ -306,7 +302,7 @@ const styles = StyleSheet.create({
     paddingVertical: 5,
   },
   icon: {
-    color: "#000",
+    color: "#503b31",
   },
   iconAfterEye: {
     color: "#000",
@@ -333,12 +329,13 @@ const styles = StyleSheet.create({
   },
   eyeIcon: {
     position: "absolute",
-    right: 37,
+    right: 17,
     top: "50%",
     transform: [{ translateY: -10 }],
+    color:"#503b31",
   },
   registerButton: {
-    backgroundColor: "#000",
+    backgroundColor: "#503b31",
     padding: 15,
     borderRadius: 5,
     alignItems: "center",
@@ -356,11 +353,11 @@ const styles = StyleSheet.create({
   },
   loginPrompt: {
     fontSize: 16,
-    color: "#000",
+    color: "#503b31",
   },
   loginText: {
     fontSize: 16,
-    color: "#000",
+    color: "#503b31",
     fontWeight: "bold",
     marginLeft: 5,
   },
@@ -407,6 +404,35 @@ const styles = StyleSheet.create({
     padding: 30,
     alignItems: "center",
     justifyContent: "center",
+  },
+  inputBox: {
+    marginBottom: 15,
+    flexDirection: "row",
+    alignItems: "center",
+    borderWidth: 1,
+    borderColor: "#ddd",
+    borderRadius: 5,
+    paddingHorizontal: 10,
+    paddingVertical: 5,
+  },
+  imageUploadButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    padding: 10,
+    backgroundColor: '#ddd',
+    borderRadius: 5,
+    marginBottom: 15,
+  },
+  imageUploadText: {
+    fontSize: 16,
+    color: "#503b31",
+  },
+  imagePreview: {
+    width: 100,
+    height: 100,
+    borderRadius: 8,
+    marginTop: 10,
+    marginBottom: 20,
   },
 });
 

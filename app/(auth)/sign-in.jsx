@@ -73,7 +73,6 @@ const LoginScreen = () => {
                     autoCapitalize="none"
                     keyboardType="email-address"
                   />
-                  <MaterialCommunityIcons name="email-outline" size={20} color="black" style={styles.icon} />
                 </View>
               </View>
               <View style={styles.inputBox}>
@@ -87,14 +86,14 @@ const LoginScreen = () => {
                       onChangeText={setPassword}
                       secureTextEntry={!passwordVisible}
                     />
-                    <MaterialCommunityIcons name="lock-outline" size={20} color="black" style={styles.icon} />
+                    
                   </View>
                   <Pressable
                     style={styles.passwordToggle}
                     onPress={togglePasswordVisibility}
                     accessibilityLabel="Mostrar u ocultar contraseña"
                   >
-                    <FontAwesome name={passwordVisible ? 'eye-slash' : 'eye'} size={24} color="black" />
+                    <FontAwesome name={passwordVisible ? 'eye-slash' : 'eye'} size={24} color="#503b31" />
                   </Pressable>
                 </View>
               </View>
@@ -163,6 +162,7 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     marginBottom: 20,
     textAlign: 'center',
+    color:"#503b31"
   },
   inputBox: {
     marginBottom: 20,
@@ -171,6 +171,7 @@ const styles = StyleSheet.create({
     marginBottom: 5,
     fontSize: 15,
     fontWeight: 'bold',
+    color:"#503b31"
   },
   inputWrapper: {
     flexDirection: 'row',
@@ -195,9 +196,10 @@ const styles = StyleSheet.create({
   },
   passwordToggle: {
     position: 'absolute',
-    right: 42,
+    right: 12,
     top: '50%',
     transform: [{ translateY: -12 }],
+    
   },
   rememberForgot: {
     flexDirection: 'row',
@@ -206,12 +208,13 @@ const styles = StyleSheet.create({
   },
   rememberMeText: {
     fontWeight: 'bold',
+    color:"#503b31"
   },
   forgotPassword: {
-    color: 'black',
+    color: '#503b31',
   },
   loginButton: {
-    backgroundColor: 'black',
+    backgroundColor: '#503b31',
     paddingVertical: 15,
     borderRadius: 5,
     width: '100%',
@@ -231,10 +234,10 @@ const styles = StyleSheet.create({
   },
   registerPrompt: {
     fontSize: 16,
-    marginRight: 5,
+    marginRight: 5,color:"#503b31",
   },
   registerText: {
-    color: 'black',
+    color: '#503b31',
     fontWeight: 'bold',
     fontSize: 16,
   },
