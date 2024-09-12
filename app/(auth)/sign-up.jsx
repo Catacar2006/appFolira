@@ -11,6 +11,7 @@ import {
   Alert,
   KeyboardAvoidingView,
   Platform,
+  Keyboard,
 } from "react-native";
 import { FontAwesome } from "@expo/vector-icons";
 import * as ImagePicker from 'expo-image-picker';
@@ -19,26 +20,16 @@ import Header from "../../components/Header";
 import Footer from "../../components/Footer";
 import { createUser } from "../../lib/appwrite";
 
-const documentTypes = [
-  "Cédula de Ciudadanía",
-  "Tarjeta de Identidad",
-  "Pasaporte",
-  "Otro",
-];
-
 const Register = () => {
   const [passwordVisible, setPasswordVisible] = useState(false);
-  const [confirmPasswordVisible, setConfirmPasswordVisible] = useState(false);
-  const [documentType, setDocumentType] = useState("");
-  const [documentNumber, setDocumentNumber] = useState("");
   const [name, setName] = useState("");
-  const [lastName, setLastName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [confirmPassword, setConfirmPassword] = useState("");
-  const [modalVisible, setModalVisible] = useState(false);
   const [birthDate, setBirthDate] = useState("");
-  const [image, setImage] = useState(null); 
+  const [phone, setPhone] = useState("");
+  const [image, setImage] = useState(null);
+  const [documentType, setDocumentType] = useState("");
+  const [documentNumber, setDocumentNumber] = useState("");
 
   const router = useRouter();
 
@@ -46,12 +37,11 @@ const Register = () => {
     if (!documentType) return "Tipo de documento es obligatorio";
     if (!documentNumber) return "Número de documento es obligatorio";
     if (!name) return "Nombre es obligatorio";
-    if (!lastName) return "Apellido es obligatorio";
     if (!email) return "Correo electrónico es obligatorio";
     if (!password) return "Contraseña es obligatoria";
     if (password.length < 6)
       return "La contraseña debe tener al menos 6 caracteres";
-    if (password !== confirmPassword) return "Las contraseñas no coinciden";
+    if (!validateBirthDate(birthDate)) return "Fecha de nacimiento inválida";
     if (!validateEmail(email)) return "El correo electrónico no es válido";
     if (!/^\d+$/.test(documentNumber))
       return "El número de documento debe contener solo números";
@@ -73,18 +63,14 @@ const Register = () => {
     try {
       await createUser(email, password);
       Alert.alert("Éxito", "Usuario registrado correctamente");
-      router.push("/sign-in"); // Navegar a la pantalla de inicio de sesión
+      router.push("/sign-in");
     } catch (error) {
       Alert.alert("Error", "No se pudo registrar el usuario");
       console.error("Error:", error);
     }
   };
 
-  const handleDocumentTypeSelect = (type) => {
-    setDocumentType(type);
-    setModalVisible(false);
-  };
-
+ 
   const handleBirthDateChange = (text) => {
     // Expresión regular para permitir solo números y "/"
     const regex = /^[0-9/]*$/;
@@ -96,10 +82,14 @@ const Register = () => {
 
   const pickImage = async () => {
     // Solicita permiso para acceder a las imágenes del dispositivo
-    let permissionResult = await ImagePicker.requestMediaLibraryPermissionsAsync();
+    let permissionResult =
+      await ImagePicker.requestMediaLibraryPermissionsAsync();
 
     if (permissionResult.granted === false) {
-      Alert.alert("Permiso denegado", "Se necesita permiso para acceder a la galería");
+      Alert.alert(
+        "Permiso denegado",
+        "Se necesita permiso para acceder a la galería"
+      );
       return;
     }
 
@@ -129,79 +119,30 @@ const Register = () => {
             <View style={styles.formBox}>
               <Text style={styles.title}>Crear Cuenta</Text>
 
-              {/* Document Number */}
-              <Text style={styles.label}>Número de Documento</Text>
+              {/* Name */}
+              <Text style={styles.label}>Nombre</Text>
               <View style={styles.inputBox}>
                 <TextInput
                   style={styles.input}
-                  placeholder="Ingrese su número de documento"
-                  value={documentNumber}
-                  onChangeText={(text) =>
-                    setDocumentNumber(text.replace(/[^0-9]/g, ""))
-                  } // Solo números
-                  keyboardType="numeric"
-                  maxLength={20}
-                />
-              </View>
-
-              {/* name usua */}
-              <Text style={styles.label}>Nombre Usuario</Text>
-              <View style={styles.inputBox}>
-                <TextInput
-                  style={styles.input}
-                  placeholder="Ingrese el nombre de usuario"
+                  placeholder="Ingrese su nombre aquí"
                   value={name}
                   onChangeText={setName}
                 />
+                <FontAwesome name="user" size={20} style={styles.icon} />
               </View>
-
-              {/* number phone */}
-              <Text style={styles.label}>Número de Telefono</Text>
-              <View style={styles.inputBox}>
-                <TextInput
-                  style={styles.input}
-                  placeholder="Ingrese su número de Telefono"
-                  value={documentNumber}
-                  onChangeText={(text) =>
-                    setDocumentNumber(text.replace(/[^0-9]/g, ""))
-                  } // Solo números
-                  keyboardType="numeric"
-                  maxLength={20}
-                />
-              </View>
-
-              {/* Birthdate */}
-              <Text style={styles.label}>Fecha de Nacimiento</Text>
-              <View style={styles.inputBox}>
-                <TextInput
-                  style={styles.input}
-                  placeholder="DD/MM/YYYY"
-                  value={birthDate}
-                  onChangeText={handleBirthDateChange}
-                  keyboardType="numeric" // Esto también ayuda a evitar letras en teclados móviles
-                />
-              </View>
-
-              {/* Campo para adjuntar imagen */}
-              <Text style={styles.label}>Foto de perfil</Text>
-              <TouchableOpacity style={styles.imageUploadButton} onPress={pickImage}>
-                <Text style={styles.imageUploadText}>Seleccionar Imagen</Text>
-              </TouchableOpacity>
-
-              {/* Vista previa de la imagen seleccionada */}
-              {image && <Image source={{ uri: image }} style={styles.imagePreview} />}
 
               {/* Email */}
               <Text style={styles.label}>Correo Electrónico</Text>
               <View style={styles.inputBox}>
                 <TextInput
                   style={styles.input}
-                  placeholder="Ingrese su correo electrónico"
+                  placeholder="Ingrese su correo electrónico aquí"
                   value={email}
                   onChangeText={setEmail}
                   keyboardType="email-address"
                   autoCapitalize="none"
                 />
+                <FontAwesome name="envelope" size={20} style={styles.icon} />
               </View>
 
               {/* Password */}
@@ -209,7 +150,7 @@ const Register = () => {
               <View style={styles.passwordContainer}>
                 <TextInput
                   style={styles.passwordInput}
-                  placeholder="Ingrese su contraseña"
+                  placeholder="Ingrese su contraseña aquí"
                   secureTextEntry={!passwordVisible}
                   value={password}
                   onChangeText={setPassword}
@@ -223,8 +164,46 @@ const Register = () => {
                     size={20}
                   />
                 </TouchableOpacity>
-
+                <FontAwesome
+                  name="lock"
+                  size={20}
+                  style={styles.iconAfterEye}
+                />
               </View>
+
+              {/* Birth Date */}
+              <Text style={styles.label}>Fecha de Nacimiento</Text>
+              <View style={styles.inputBox}>
+                <TextInput
+                  style={styles.input}
+                  placeholder="YYYY-MM-DD"
+                  value={birthDate}
+                  onChangeText={setBirthDate} // Asegúrate de que esta línea esté correctamente escrita
+                  keyboardType="numeric"
+                />
+                <FontAwesome name="calendar" size={20} style={styles.icon} />
+              </View>
+
+              {/* Phone */}
+              <Text style={styles.label}>Teléfono</Text>
+              <View style={styles.inputBox}>
+                <TextInput
+                  style={styles.input}
+                  placeholder="Ingrese su número de teléfono"
+                  value={phone}
+                  onChangeText={setPhone}
+                  keyboardType="phone-pad"
+                  maxLength={10}
+                />
+                <FontAwesome name="phone" size={20} style={styles.icon} />
+              </View>
+
+              {/* Upload Image */}
+              <Text style={styles.label}>Subir Imagen (Opcional)</Text>
+              <TouchableOpacity onPress={pickImage} style={styles.uploadButton}>
+                <Text style={styles.uploadButtonText}>Seleccionar Imagen</Text>
+              </TouchableOpacity>
+              {image && <Text>Imagen seleccionada</Text>}
 
               <TouchableOpacity
                 style={styles.registerButton}
@@ -246,8 +225,6 @@ const Register = () => {
           </View>
         </ScrollView>
       </KeyboardAvoidingView>
-
-      
     </SafeAreaView>
   );
 };
@@ -332,7 +309,7 @@ const styles = StyleSheet.create({
     right: 17,
     top: "50%",
     transform: [{ translateY: -10 }],
-    color:"#503b31",
+    color: "#503b31",
   },
   registerButton: {
     backgroundColor: "#503b31",
@@ -405,21 +382,11 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
   },
-  inputBox: {
-    marginBottom: 15,
+  imageUploadButton: {
     flexDirection: "row",
     alignItems: "center",
-    borderWidth: 1,
-    borderColor: "#ddd",
-    borderRadius: 5,
-    paddingHorizontal: 10,
-    paddingVertical: 5,
-  },
-  imageUploadButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
     padding: 10,
-    backgroundColor: '#ddd',
+    backgroundColor: "#ddd",
     borderRadius: 5,
     marginBottom: 15,
   },
@@ -433,6 +400,18 @@ const styles = StyleSheet.create({
     borderRadius: 8,
     marginTop: 10,
     marginBottom: 20,
+  },
+  // ... (Mantén tus estilos existentes)
+  uploadButton: {
+    backgroundColor: "#ddd",
+    padding: 10,
+    borderRadius: 5,
+    alignItems: "center",
+    marginBottom: 20,
+  },
+  uploadButtonText: {
+    color: "#000",
+    fontSize: 16,
   },
 });
 
